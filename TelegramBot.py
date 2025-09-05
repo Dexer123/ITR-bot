@@ -64,15 +64,7 @@ class TelegramBot:
             
 
     def run(self):
-        while True:
-            try:
-                self.app.run_polling(drop_pending_updates=True)
-            except telegram.error.NetworkError as e:
-                print("Network error:", e)
-                sleep(5)
-            except Exception as e:
-                print("Unexpected error:", e)
-                sleep(5)
+        self.app.run_polling(drop_pending_updates=True)
             
         
 

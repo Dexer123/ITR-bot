@@ -28,7 +28,9 @@ class WhatsAppBot:
 
 
     def start(self):
+        print("WhatsAppBot started\n", self.get_status_instance())
         self.greenAPI.webhooks.startReceivingNotifications(self.handler)
+        
         
     def stop(self):
         self.greenAPI.webhooks.stopReceivingNotifications()
@@ -101,21 +103,23 @@ class WhatsAppBot:
         return filename, url
     
 
-if __name__ == "__main__":
-    load_dotenv()
 
-    id_instance = os.getenv("ID_INSTANCE")
-    api_token = os.getenv("API_TOKEN")
+def main():
+    load_dotenv()
+    id_instance = os.getenv("WA_ID_INSTANCE")
+    api_token = os.getenv("WA_API_TOKEN")
     tg_token = os.getenv("TG_BOT_TOKEN")
     tg_group = os.getenv("TG_GROUP_CHAT_ID")
     tg_thread = os.getenv("TG_THREAD_ID")
     assert (id_instance and api_token and tg_token and tg_group), "Не заданы переменные окружения в .env"
-    
-    wa_bot = WhatsAppBot(id_instance, api_token)
-    tg_bot = TelegramBot(parent=wa_bot, token=tg_token, group_chat_id=tg_group, thread_id=tg_thread)
+
+    wa_bot = WhatsAppBot(id_instance=id_instance, api_token=api_token, debug_mode=True)
+    tg_bot = TelegramBot(parent=wa_bot, token=tg_token, group_chat_id=tg_group, thread_id=tg_thread, debug_mode=True)
     wa_bot.tg_bot = tg_bot
+    wa_bot.start()
     tg_bot.run()
     
-    wa_status = wa_bot.start()
-    print("WA status:", wa_status)
-    wa_bot.stop()
+
+
+if __name__ == "__main__":
+    main()
