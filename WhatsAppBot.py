@@ -45,9 +45,8 @@ class WhatsAppBot:
         
     def handler(self, type_webhook: str, body: dict, r=None) -> None:
         if type_webhook in ["incomingMessageReceived", "outgoingMessageReceived"]:
-            r = self._incoming_message_received(body)
-            if r:
-                self.tg_bot.send_group_message_sync(r)
+            msg, file_path, msg_type, url = self._incoming_message_received(body)
+            self.tg_bot.send_group_message_sync(msg, file_path=file_path, msg_type=msg_type, url=url)
 
 
     @staticmethod
@@ -72,7 +71,8 @@ class WhatsAppBot:
         
         if msg_type in ['imageMessage', 'videoMessage', 'documentMessage', 'audioMessage']:
             filename, url = self._get_file_info(msg_data.get("fileMessageData", {}), body)
-            return f"Сообщение от {sender_info} в {time}: {msg_text}\n\nВложение: {filename}\nURL: {url}"
+            file_path = self._download_file(url, filename)
+            return f"Сообщение от {sender_info} в {time}: {msg_text}\n\nВложение: {filename}", file_path, msg_type, url
     
     def _is_valid_message(self, body: dict) -> bool:
         return (body["senderData"]["chatId"] == self.wa_group_id and 
@@ -102,6 +102,14 @@ class WhatsAppBot:
         
         return filename, url
     
+    def _download_file(self, url: str, filename: str) -> None:
+        tmp_dir = os.path("downloads") + os.path(filename)
+        print(tmp_dir)
+        os.makedirs(tmp_dir, exist_ok=True)
+        response = self.greenAPI.receiving.downloadFileByUrl(url)
+        with open(tmp_dir + filename, 'wb') as f:
+            f.write(response.content)
+        return tmp_dir
 
 
 def main():
@@ -113,8 +121,8 @@ def main():
     tg_thread = os.getenv("TG_THREAD_ID")
     assert (id_instance and api_token and tg_token and tg_group), "Не заданы переменные окружения в .env"
 
-    wa_bot = WhatsAppBot(id_instance=id_instance, api_token=api_token, debug_mode=True)
-    tg_bot = TelegramBot(parent=wa_bot, token=tg_token, group_chat_id=tg_group, thread_id=tg_thread, debug_mode=True)
+    wa_bot = WhatsAppBot(id_instance=id_instance, api_token=api_token, debug_mode=False)
+    tg_bot = TelegramBot(parent=wa_bot, token=tg_token, group_chat_id=tg_group, thread_id=tg_thread, debug_mode=False)
     wa_bot.tg_bot = tg_bot
     wa_bot.start()
     tg_bot.run()

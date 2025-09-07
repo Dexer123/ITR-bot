@@ -26,7 +26,7 @@ class TelegramBot:
         if self.debug_mode:
             self.app.add_handler(MessageHandler(filters.ALL, self.debug))
 
-    async def send_group_message(self, message: str=None):
+    async def send_group_message(self, message: str=None, file_path: os.path = None, msg_type: str = None, url: str = None):
         if self.debug_mode:
             print("send_group_message:", message)
             return
@@ -40,9 +40,49 @@ class TelegramBot:
                 text=message,
                 message_thread_id=int(self.thread_id)
             )
+            if file_path and msg_type:
+                if msg_type == 'imageMessage':
+                    await self.app.bot.send_photo(
+                        chat_id=int(self.group_chat_id),
+                        photo=open(file_path, 'rb'),
+                        caption=message,
+                        message_thread_id=int(self.thread_id)
+                    )
+                elif msg_type == 'videoMessage':
+                    await self.app.bot.send_video(
+                        chat_id=int(self.group_chat_id),
+                        video=open(file_path, 'rb'),
+                        caption=message,
+                        message_thread_id=int(self.thread_id)
+                    )
+                elif msg_type == 'audioMessage':
+                    await self.app.bot.send_audio(
+                        chat_id=int(self.group_chat_id),
+                        audio=open(file_path, 'rb'),
+                        caption=message,
+                        message_thread_id=int(self.thread_id)
+                    )
+                elif msg_type == 'documentMessage':
+                    await self.app.bot.send_document(
+                        chat_id=int(self.group_chat_id),
+                        document=open(file_path, 'rb'),
+                        caption=message,
+                        message_thread_id=int(self.thread_id)
+                    )
+                else:
+                    await self.app.bot.send_message(
+                        chat_id=int(self.group_chat_id),
+                        text=f"Unsupported file type: {msg_type}\n{message}\n{url}",
+                        message_thread_id=int(self.thread_id)
+                    )
+                try:
+                    os.remove(file_path)
+                except Exception as e:
+                    print(f"Error deleting file {file_path}: {e}")
+                
             
-    def send_group_message_sync(self, message: str = None):
-        asyncio.get_event_loop().run_until_complete(self.send_group_message(message))
+    def send_group_message_sync(self, message, file_path, msg_type, url):
+        asyncio.get_event_loop().run_until_complete(self.send_group_message(message, file_path, msg_type, url))
         
         
     async def cmd_status(self, update, context):
