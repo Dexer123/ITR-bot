@@ -1,3 +1,5 @@
+# Copyright (c) 2025 Dexer
+
 from telegram.ext import Application, MessageHandler, CommandHandler, filters
 from dotenv import load_dotenv
 from time import sleep
