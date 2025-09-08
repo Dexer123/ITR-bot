@@ -1,3 +1,5 @@
+# Copyright (c) 2025 Dexer
+
 from TelegramBot import TelegramBot
 
 from whatsapp_api_client_python import API
